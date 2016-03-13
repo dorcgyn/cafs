@@ -15,6 +15,7 @@
         </repository>
     </repositories>
 
+    <!-- CAF Storage Dependency -->
     <dependencies>
         <dependency>
             <groupId>com.hpe.caf</groupId>
@@ -46,6 +47,14 @@
             <artifactId>javax.servlet-api</artifactId>
             <version>3.1.0</version>
             <scope>runtime</scope>
+        </dependency>
+
+        <!-- Hackthon FS Dependency -->
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>4.12</version>
+            <scope>test</scope>
         </dependency>
     </dependencies>
 
