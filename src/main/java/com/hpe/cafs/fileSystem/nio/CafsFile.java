@@ -135,6 +135,13 @@ public class CafsFile {
         return provider(path).readAttributes(path, attributes, options);
     }
 
+    /**
+     * Deletes a file.
+     */
+    public static void delete(Path path) throws IOException {
+        provider(path).delete(path);
+    }
+
     private static FileSystemProvider provider(Path path) {
         return new CafsProvider(path);
     }

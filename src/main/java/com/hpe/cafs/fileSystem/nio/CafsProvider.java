@@ -33,8 +33,10 @@ import java.util.Set;
 
 import com.hpe.caf.storage.common.crypto.WrappedKey;
 import com.hpe.caf.storage.sdk.StorageClient;
+import com.hpe.caf.storage.sdk.exceptions.StorageServiceException;
 import com.hpe.caf.storage.sdk.model.AssetMetadata;
 import com.hpe.caf.storage.sdk.model.AssetMetadataList;
+import com.hpe.caf.storage.sdk.model.requests.DeleteAssetRequest;
 import com.hpe.caf.storage.sdk.model.requests.GetAssetContainerEncryptionKeyRequest;
 import com.hpe.caf.storage.sdk.model.requests.GetCustomAssetMetadataRequest;
 import com.hpe.caf.storage.sdk.model.requests.GetTopLevelAssetsRequest;
@@ -163,7 +165,7 @@ public class CafsProvider extends FileSystemProvider {
                 storageClient.setCustomAssetMetadata(new SetCustomAssetMetadataRequest(
                         accessToken, containerId, parentId, newJson));
             }
-            System.out.println("Create Directory " + assetMetadata.getName() + ", " + assetMetadata.getType());
+            // System.out.println("Create Directory " + assetMetadata.getName() + ", " + assetMetadata.getType());
         } catch (Exception e) {
             System.out.println("Exception in createDirectory: " + e);
         }
@@ -171,7 +173,18 @@ public class CafsProvider extends FileSystemProvider {
 
     @Override
     public void delete(Path path) throws IOException {
-
+        String assetId = getAssetId(path);
+        try {
+            storageClient.deleteAsset(new DeleteAssetRequest(accessToken, containerId, assetId));
+        } catch (StorageServiceException e) {
+            if (e.getHTTPStatus() == 403) {
+                throw new RuntimeException("You don't have permission to delete it.");
+            } else if (e.getHTTPStatus() == 409) {
+                throw new RuntimeException("This directory has file/subdir inside. Use recursive delete.");
+            }
+        } catch (Exception e) {
+            throw new IOException(e);
+        }
     }
 
     @Override
