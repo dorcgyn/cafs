@@ -1,5 +1,11 @@
 # cafs
-CAF file system.
+Download CAF file system.
+
+From the [tutorial](https://help.github.com/articles/fetching-a-remote/)
+
+```
+git clone https://github.com/dorcgyn/cafs.git
+``` 
 
 ## Build Project
 ```
