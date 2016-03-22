@@ -7,6 +7,7 @@
 package com.hpe.cafs.fileSystem.nio;
 
 import java.io.ByteArrayInputStream;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
@@ -38,6 +39,7 @@ import com.hpe.caf.storage.sdk.model.AssetMetadata;
 import com.hpe.caf.storage.sdk.model.AssetMetadataList;
 import com.hpe.caf.storage.sdk.model.requests.DeleteAssetRequest;
 import com.hpe.caf.storage.sdk.model.requests.GetAssetContainerEncryptionKeyRequest;
+import com.hpe.caf.storage.sdk.model.requests.GetAssetMetadataRequest;
 import com.hpe.caf.storage.sdk.model.requests.GetCustomAssetMetadataRequest;
 import com.hpe.caf.storage.sdk.model.requests.GetTopLevelAssetsRequest;
 import com.hpe.caf.storage.sdk.model.requests.SetCustomAssetMetadataRequest;
@@ -111,7 +113,7 @@ public class CafsProvider extends FileSystemProvider {
                 try {
 
                     ArrayList<Path> paths = new ArrayList<Path>();
-                    if (dir.toString().equals("/")) {
+                    if (dir.toString().equals(File.separator)) {
                         // for root directory
                         final AssetMetadataList assetMetadatas = storageClient.getTopLevelAssets(
                                 new GetTopLevelAssetsRequest(accessToken, containerId));
@@ -168,6 +170,7 @@ public class CafsProvider extends FileSystemProvider {
             // System.out.println("Create Directory " + assetMetadata.getName() + ", " + assetMetadata.getType());
         } catch (Exception e) {
             System.out.println("Exception in createDirectory: " + e);
+            e.printStackTrace();
         }
     }
 
@@ -230,19 +233,17 @@ public class CafsProvider extends FileSystemProvider {
 
     @Override
     public Map<String, Object> readAttributes(Path path, String attributes, LinkOption... options) throws IOException {
-        Map<String, Object> attributeMap = null;
+        final Map<String, Object> attributeMap;
         try {
-            final AssetMetadataList assetMetadatas =
-                    storageClient.getTopLevelAssets(new GetTopLevelAssetsRequest(accessToken, containerId));
-            for (AssetMetadata assetMetadata : assetMetadatas.getEntries()) {
-                if (path.getFileName().equals(assetMetadata.getName())) {
-                    attributeMap = new HashMap<String, Object>();
-                    attributeMap.put("type", assetMetadata.getType());
-                    attributeMap.put("custom", assetMetadata.getCustomMetadata());
-                }
-            }
+            String assetId = getAssetId(path);
+            AssetMetadata assetMetadata = storageClient.getAssetMetadata(
+                    new GetAssetMetadataRequest(accessToken, containerId, assetId));
+            attributeMap = new HashMap<String, Object>();
+            attributeMap.put("type", assetMetadata.getType());
+            attributeMap.put("custom", assetMetadata.getCustomMetadata());
         } catch (Exception e) {
             System.out.println("Exception in readAttributes. " + e);
+            return null;
         }
 
         return attributeMap;

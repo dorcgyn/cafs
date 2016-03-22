@@ -92,7 +92,7 @@
             <groupId>javax.servlet</groupId>
             <artifactId>javax.servlet-api</artifactId>
             <version>3.1.0</version>
-            <scope>runtime</scope>
+          <!--  <scope>runtime</scope>-->
         </dependency>
 
         <!-- Hackthon FS Dependency -->
@@ -107,6 +107,28 @@
             <groupId>org.eclipse.jetty</groupId>
             <artifactId>jetty-server</artifactId>
             <version>9.0.2.v20130417</version>
+        </dependency>
+
+        <dependency>
+            <groupId>javax.mail</groupId>
+            <artifactId>mail</artifactId>
+            <version>1.4.3</version>
+        </dependency>
+<!--
+        <dependency>
+            <groupId>com.github.serceman</groupId>
+            <artifactId>jnr-fuse</artifactId>
+            <version>0.3</version>
+            <scope>system</scope>
+            <systemPath>${project.basedir}/src/main/resources/jnr-fuse-0.3-all.jar</systemPath>
+        </dependency>
+-->
+        <dependency>
+            <groupId>test</groupId>
+            <artifactId>fuse-jna</artifactId>
+            <version>1.0.3</version>
+            <scope>system</scope>
+            <systemPath>${project.basedir}/src/main/resources/fuse-jna-1.0.3-uber.jar</systemPath>
         </dependency>
     </dependencies>
 

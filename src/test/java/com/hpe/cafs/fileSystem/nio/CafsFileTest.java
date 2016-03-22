@@ -8,6 +8,7 @@ import java.nio.file.DirectoryStream;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Iterator;
+import java.util.Map;
 import java.util.Random;
 
 import org.junit.Ignore;
@@ -39,19 +40,23 @@ public class CafsFileTest {
 
         System.out.println("List root dirs: ");
         while (iterator.hasNext()) {
-            System.out.println(iterator.next().toString());
+            String fileName = iterator.next().toString();
+            Map<String,Object> attrs = CafsFile.readAttributes(Paths.get("/", fileName), null);
+            System.out.println(fileName + ".\tType: " + attrs.get("type"));
         }
     }
 
     @Ignore
     @Test
-    public void testListDir() throws Exception{
-        DirectoryStream<Path> dirs = CafsFile.newDirectoryStream(Paths.get("/test2/"));
+    public void testSubDir() throws Exception{
+        DirectoryStream<Path> dirs = CafsFile.newDirectoryStream(Paths.get("/test/"));
         Iterator<Path> iterator = dirs.iterator();
 
         System.out.println("List dirs: ");
         while (iterator.hasNext()) {
-            System.out.println(iterator.next().toString());
+            String fileName = iterator.next().toString();
+            Map<String,Object> attrs = CafsFile.readAttributes(Paths.get("/test", fileName), null);
+            System.out.println(fileName + "\ttype: " + attrs.get("type"));
         }
     }
 
