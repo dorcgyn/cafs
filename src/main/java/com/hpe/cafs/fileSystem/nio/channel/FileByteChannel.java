@@ -10,6 +10,7 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.SeekableByteChannel;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -25,25 +26,27 @@ public class FileByteChannel implements SeekableByteChannel{
     private List<Byte> byteArray;
     private long position;
     private boolean isOpen;
-    private boolean isWrite = false;
+    private boolean isWrite;
 
     private String parentId;
-    private String fileName;
+    private Path path;
 
 
 
-    public FileByteChannel(String parentId, String fileName) {
+    public FileByteChannel(String parentId, Path path) {
         byteArray = new ArrayList<Byte>(1024);
         position = 0;
         isOpen = true;
+        isWrite = true;
 
         this.parentId = parentId;
-        this.fileName = fileName;
+        this.path = path;
     }
 
-    public FileByteChannel(String parentId, String fileName, List<Byte> bytes) {
-        this(parentId, fileName);
+    public FileByteChannel(String parentId, Path path, List<Byte> bytes) {
+        this(parentId, path);
         byteArray = bytes;
+        isWrite = false;
     }
 
     @Override
@@ -120,7 +123,13 @@ public class FileByteChannel implements SeekableByteChannel{
                 input[i] = byteArray.get(i);
             }
             try {
-                CafsProvider.createFile(fileName, new ByteArrayInputStream(input), size(), parentId, CafsFile.TYPE_FILE);
+                try {
+                    CafsFile.delete(path);
+                } catch (RuntimeException e) {
+                    // it is ok that the file doesn't exit
+                }
+                CafsProvider.createFile(path.getFileName().toString(),
+                        new ByteArrayInputStream(input), size(), parentId, CafsFile.TYPE_FILE);
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }

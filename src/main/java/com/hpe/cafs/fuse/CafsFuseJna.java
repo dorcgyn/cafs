@@ -1,16 +1,20 @@
 /*******************************************************************************
  *  * © Copyright ${year}, Hewlett-Packard Development Company, L.P.
- ******************************************************************************
- */
+ *******************************************************************************/
 
 package com.hpe.cafs.fuse;
 
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.File;
+import java.io.IOException;
+import java.io.OutputStream;
 import java.nio.ByteBuffer;
 import java.nio.file.DirectoryStream;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Iterator;
+import java.util.Map;
 
 import com.hpe.cafs.fileSystem.nio.CafsFile;
 import net.fusejna.DirectoryFiller;
@@ -25,6 +29,7 @@ import net.fusejna.StructTimeBuffer;
 import net.fusejna.XattrFiller;
 import net.fusejna.XattrListFiller;
 import net.fusejna.types.TypeMode;
+import org.apache.commons.io.IOUtils;
 
 /**
  * Created by dev on 3/20/16.
@@ -62,17 +67,22 @@ public class CafsFuseJna extends FuseFilesystem{
 
     @Override
     public int create(String s, TypeMode.ModeWrapper modeWrapper, StructFuseFileInfo.FileInfoWrapper fileInfoWrapper) {
-        return 0;
+        try {
+            BufferedWriter bufferedWriter = CafsFile.newBufferedWriter(Paths.get(s));
+            bufferedWriter.close();
+            return 0;
+        } catch (IOException e) {
+            return -ErrorCodes.EIO();
+        }
     }
 
     @Override
     public void destroy() {
-
     }
 
     @Override
     public int fgetattr(String s, StructStat.StatWrapper statWrapper, StructFuseFileInfo.FileInfoWrapper fileInfoWrapper) {
-        return 0;
+        return getattr(s, statWrapper);
     }
 
     @Override
@@ -107,12 +117,14 @@ public class CafsFuseJna extends FuseFilesystem{
                 statWrapper.setMode(TypeMode.NodeType.DIRECTORY);
                 return 0;
             } else {
-                boolean isDir = CafsFile.isDirectory(Paths.get(s));
+                Map<String,Object> attrs = CafsFile.readAttributes(Paths.get(s), null, null);
+                boolean isDir = CafsFile.TYPE_DIR.equals(attrs.get("type"));
                 if (isDir) {
                     statWrapper.setMode(TypeMode.NodeType.DIRECTORY);
                     return 0;
                 } else {
-                    statWrapper.setMode(TypeMode.NodeType.FILE);
+
+                    statWrapper.setMode(TypeMode.NodeType.FILE).size((Long)attrs.get("size"));
                     return 0;
                 }
             }
@@ -208,8 +220,15 @@ public class CafsFuseJna extends FuseFilesystem{
     }
 
     @Override
-    public int read(String s, ByteBuffer byteBuffer, long l, long l2, StructFuseFileInfo.FileInfoWrapper fileInfoWrapper) {
-        return 0;
+    public int read(String s, ByteBuffer byteBuffer, long size, long offset, StructFuseFileInfo.FileInfoWrapper fileInfoWrapper) {
+        try {
+            BufferedReader bufferedReader = CafsFile.newBufferedReader(Paths.get(s));
+            String str = IOUtils.toString(bufferedReader);
+            byteBuffer.put(str.getBytes());
+            return str.getBytes().length;
+        } catch (IOException e) {
+            return -ErrorCodes.EIO();
+        }
     }
 
     @Override
@@ -242,21 +261,11 @@ public class CafsFuseJna extends FuseFilesystem{
 
     @Override
     public int release(String s, StructFuseFileInfo.FileInfoWrapper fileInfoWrapper) {
-        try {
-            CafsFile.delete(Paths.get(s));
-        } catch (Exception e) {
-            return -ErrorCodes.ENOENT();
-        }
         return 0;
     }
 
     @Override
     public int releasedir(String s, StructFuseFileInfo.FileInfoWrapper fileInfoWrapper) {
-        try {
-            CafsFile.delete(Paths.get(s));
-        } catch (Exception e) {
-            return -ErrorCodes.ENOENT();
-        }
         return 0;
     }
 
@@ -272,7 +281,12 @@ public class CafsFuseJna extends FuseFilesystem{
 
     @Override
     public int rmdir(String s) {
-        return 0;
+        try {
+            CafsFile.delete(Paths.get(s));
+            return 0;
+        } catch (Exception e) {
+            return -ErrorCodes.ENOENT();
+        }
     }
 
     @Override
@@ -297,7 +311,12 @@ public class CafsFuseJna extends FuseFilesystem{
 
     @Override
     public int unlink(String s) {
-        return 0;
+        try {
+            CafsFile.delete(Paths.get(s));
+            return 0;
+        } catch (IOException e) {
+            return -ErrorCodes.ENOENT();
+        }
     }
 
     @Override
@@ -306,8 +325,17 @@ public class CafsFuseJna extends FuseFilesystem{
     }
 
     @Override
-    public int write(String s, ByteBuffer byteBuffer, long l, long l2, StructFuseFileInfo.FileInfoWrapper fileInfoWrapper) {
-        return 0;
+    public int write(String s, ByteBuffer byteBuffer, long size, long offset, StructFuseFileInfo.FileInfoWrapper fileInfoWrapper) {
+        try {
+            OutputStream os = CafsFile.newOutputStream(Paths.get(s));
+            byte[] bytes = new byte[(int)size];
+            byteBuffer.get(bytes, (int)offset, (int)size);
+            os.write(bytes);
+            os.close();
+            return (int)size;
+        } catch (Exception e) {
+            return -ErrorCodes.EIO();
+        }
     }
 
     public static void main(String[] args) throws Exception{

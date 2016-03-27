@@ -106,7 +106,7 @@ public class CafsProvider extends FileSystemProvider {
         if (options.contains(StandardOpenOption.READ)) {
             String assetId = getAssetId(path);
             if (assetId == null) {
-                return new FileByteChannel(getAssetId(path.getParent()), path.getFileName().toString(), new ArrayList<Byte>());
+                return new FileByteChannel(getAssetId(path.getParent()), path, new ArrayList<Byte>());
             }
             try {
                 Asset asset = storageClient.downloadAsset(new DownloadAssetRequest(accessToken, containerId, assetId, containerkey));
@@ -116,16 +116,13 @@ public class CafsProvider extends FileSystemProvider {
                 for (int i = 0; i < size; i++) {
                     content.add((byte)is.read());
                 }
-                return new FileByteChannel(getAssetId(path.getParent()), path.getFileName().toString(), content);
+                return new FileByteChannel(getAssetId(path.getParent()), path, content);
             } catch (Exception sse) {
                 throw new IOException("Unable to open file");
             }
         } else {
             // if (options.contains(StandardOpenOption.WRITE))
-            if (getAssetId(path) != null) {
-                throw new RuntimeException("File already exists. Unable to create new file");
-            }
-            return new FileByteChannel(getAssetId(path.getParent()), path.getFileName().toString());
+            return new FileByteChannel(getAssetId(path.getParent()), path);
         }
 
     }
@@ -288,6 +285,7 @@ public class CafsProvider extends FileSystemProvider {
             attributeMap = new HashMap<String, Object>();
             attributeMap.put("type", assetMetadata.getType());
             attributeMap.put("custom", assetMetadata.getCustomMetadata());
+            attributeMap.put("size", assetMetadata.getSize());
         } catch (Exception e) {
             System.out.println("Exception in readAttributes. " + e);
             return null;
