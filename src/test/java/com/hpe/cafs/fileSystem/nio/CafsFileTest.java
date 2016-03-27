@@ -4,6 +4,8 @@
 
 package com.hpe.cafs.fileSystem.nio;
 
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.nio.file.DirectoryStream;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -11,6 +13,7 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Random;
 
+import org.apache.commons.io.IOUtils;
 import org.junit.Ignore;
 import org.junit.Test;
 
@@ -42,7 +45,7 @@ public class CafsFileTest {
         while (iterator.hasNext()) {
             String fileName = iterator.next().toString();
             Map<String,Object> attrs = CafsFile.readAttributes(Paths.get("/", fileName), null);
-            System.out.println(fileName + ".\tType: " + attrs.get("type"));
+            System.out.println(fileName + "\tType: " + attrs.get("type"));
         }
     }
 
@@ -63,6 +66,23 @@ public class CafsFileTest {
     @Ignore
     @Test
     public void removeDir() throws Exception {
-        CafsFile.delete(Paths.get("/dir_281621541"));
+        CafsFile.delete(Paths.get("/dir_-1589088888"));
+    }
+
+    @Ignore
+    @Test
+    public void createFile() throws Exception {
+        BufferedWriter bufferedWriter = CafsFile.newBufferedWriter(Paths.get("/dorcg/test2.txt"));
+        bufferedWriter.write("Thixzxcv s is my test contendt.");
+        bufferedWriter.close();
+    }
+
+    @Ignore
+    @Test
+    public void readFile() throws Exception {
+        BufferedReader bufferedReader = CafsFile.newBufferedReader(Paths.get("/dorcg/test2.txt"));
+        String str = IOUtils.toString(bufferedReader);
+        System.out.println(str);
+        bufferedReader.close();
     }
 }

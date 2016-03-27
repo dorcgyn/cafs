@@ -6,19 +6,33 @@
 
 package com.hpe.cafs.fileSystem.nio;
 
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
+import java.io.Reader;
+import java.io.Writer;
+import java.nio.channels.Channels;
 import java.nio.file.DirectoryStream;
 import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.LinkOption;
 import java.nio.file.NoSuchFileException;
+import java.nio.file.OpenOption;
 import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
 import java.nio.file.attribute.FileAttribute;
 import java.nio.file.spi.FileSystemProvider;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * Created by dev on 3/13/16.
  */
+// Simulate java.nio.file.Files
 public class CafsFile {
 
      public final static String TYPE_DIR = "DIR";
@@ -141,6 +155,32 @@ public class CafsFile {
     public static void delete(Path path) throws IOException {
         provider(path).delete(path);
     }
+
+    /**
+        Write data into file
+     */
+    public static BufferedWriter newBufferedWriter(Path path) throws IOException {
+        Writer writer = new OutputStreamWriter(newOutputStream(path));
+        return new BufferedWriter(writer);
+    }
+
+    /**
+     *  Read data from file
+     */
+    public static BufferedReader newBufferedReader(Path path) throws IOException {
+        Reader reader  = new InputStreamReader(newInputStream(path));
+        return new BufferedReader(reader);
+    }
+
+    public static OutputStream newOutputStream(Path path) throws IOException {
+        return provider(path).newOutputStream(path, StandardOpenOption.WRITE);
+    }
+    public static InputStream newInputStream(Path path) throws IOException {
+        Set<OpenOption> options = new HashSet<OpenOption>();
+        options.add(StandardOpenOption.READ);
+        return Channels.newInputStream(provider(path).newByteChannel(path, options));
+    }
+
 
     private static FileSystemProvider provider(Path path) {
         return new CafsProvider(path);

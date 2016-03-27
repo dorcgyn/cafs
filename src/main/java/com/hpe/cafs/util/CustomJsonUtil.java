@@ -60,6 +60,25 @@ public class CustomJsonUtil {
         return obj.toJSONString();
     }
 
+    public static String removeSubInode(String origJson, String assetId) {
+        // get parent dir
+        JSONObject obj = getCustomJson(origJson);
+        JSONArray subDirs = (JSONArray)obj.get(SUB_DIRS);
+
+        // remove sub inode from json obj
+        for (int i = 0; i < subDirs.size(); i++) {
+            JSONObject subInode = (JSONObject)subDirs.get(i);
+            String inodeId = (String)subInode.get(SUB_ID);
+            if (inodeId.equals(assetId)) {
+                subDirs.remove(i);
+                break;
+            }
+        }
+
+        // return json string
+        return obj.toJSONString();
+    }
+
     public static List<InodeObj> getSubInodes(String origJson) {
         JSONObject obj = getCustomJson(origJson);
         JSONArray subDirs = (JSONArray)obj.get(SUB_DIRS);

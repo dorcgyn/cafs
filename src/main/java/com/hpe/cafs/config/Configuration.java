@@ -24,8 +24,8 @@ public class Configuration {
 
     public String getAccessToken() {
         return identityClient.directGrantAccessToken(
-                /*"adminuser06@hackathon.hpe.com"*/"groovy@hp.com",                           // IDM Username
-                /*"1Connected@"*/"C@FSt0rage#Test",                         // IDM Password
+                "adminuser06@hackathon.hpe.com"/*"groovy@hp.com"*/,                           // IDM Username
+                "1Connected@"/*"C@FSt0rage#Test"*/,                         // IDM Password
                 "343e9c6f-eb00-442e-a236-e0c3868ae81a");   // KeyCloak Client Secret
     }
     /*

@@ -4,12 +4,14 @@
 
 package com.hpe.cafs.cli;
 
+import java.io.BufferedReader;
 import java.nio.file.DirectoryStream;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Iterator;
 
 import com.hpe.cafs.fileSystem.nio.CafsFile;
+import org.apache.commons.io.IOUtils;
 
 /**
  * Created by dev on 3/16/16.
@@ -42,6 +44,18 @@ public class Cafs {
                 Path fullPath = Paths.get(cmd.getPath(), iterator.next().toString());
                 System.out.println(fullPath.toString());
             }
+            return;
+        }
+
+        if (cmd.isCat()) {
+            if (CafsFile.isDirectory(Paths.get(cmd.getPath()))) {
+                System.out.println(cmd.getPath() + " is a directory.");
+                return;
+            }
+            BufferedReader bufferedReader = CafsFile.newBufferedReader(Paths.get(cmd.getPath()));
+            String str = IOUtils.toString(bufferedReader);
+            System.out.println(str);
+            bufferedReader.close();
             return;
         }
     }

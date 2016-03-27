@@ -21,6 +21,7 @@ import java.nio.file.LinkOption;
 import java.nio.file.OpenOption;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.nio.file.attribute.FileAttribute;
 import java.nio.file.attribute.FileAttributeView;
@@ -34,10 +35,13 @@ import java.util.Set;
 
 import com.hpe.caf.storage.common.crypto.WrappedKey;
 import com.hpe.caf.storage.sdk.StorageClient;
+import com.hpe.caf.storage.sdk.exceptions.StorageServiceConnectException;
 import com.hpe.caf.storage.sdk.exceptions.StorageServiceException;
+import com.hpe.caf.storage.sdk.model.Asset;
 import com.hpe.caf.storage.sdk.model.AssetMetadata;
 import com.hpe.caf.storage.sdk.model.AssetMetadataList;
 import com.hpe.caf.storage.sdk.model.requests.DeleteAssetRequest;
+import com.hpe.caf.storage.sdk.model.requests.DownloadAssetRequest;
 import com.hpe.caf.storage.sdk.model.requests.GetAssetContainerEncryptionKeyRequest;
 import com.hpe.caf.storage.sdk.model.requests.GetAssetMetadataRequest;
 import com.hpe.caf.storage.sdk.model.requests.GetCustomAssetMetadataRequest;
@@ -46,6 +50,7 @@ import com.hpe.caf.storage.sdk.model.requests.SetCustomAssetMetadataRequest;
 import com.hpe.caf.storage.sdk.model.requests.UploadAssetRequest;
 import com.hpe.cafs.config.Configuration;
 import com.hpe.cafs.config.ConfigurationFactory;
+import com.hpe.cafs.fileSystem.nio.channel.FileByteChannel;
 import com.hpe.cafs.util.CustomJsonUtil;
 
 /**
@@ -98,7 +103,31 @@ public class CafsProvider extends FileSystemProvider {
 
     @Override
     public SeekableByteChannel newByteChannel(Path path, Set<? extends OpenOption> options, FileAttribute<?>... attrs) throws IOException {
-        return null;
+        if (options.contains(StandardOpenOption.READ)) {
+            String assetId = getAssetId(path);
+            if (assetId == null) {
+                return new FileByteChannel(getAssetId(path.getParent()), path.getFileName().toString(), new ArrayList<Byte>());
+            }
+            try {
+                Asset asset = storageClient.downloadAsset(new DownloadAssetRequest(accessToken, containerId, assetId, containerkey));
+                int size = asset.getAssetMetadata().getSize().intValue();
+                List<Byte> content = new ArrayList<Byte>(size);
+                InputStream is = asset.getDecryptedStream();
+                for (int i = 0; i < size; i++) {
+                    content.add((byte)is.read());
+                }
+                return new FileByteChannel(getAssetId(path.getParent()), path.getFileName().toString(), content);
+            } catch (Exception sse) {
+                throw new IOException("Unable to open file");
+            }
+        } else {
+            // if (options.contains(StandardOpenOption.WRITE))
+            if (getAssetId(path) != null) {
+                throw new RuntimeException("File already exists. Unable to create new file");
+            }
+            return new FileByteChannel(getAssetId(path.getParent()), path.getFileName().toString());
+        }
+
     }
 
     // List Directory
@@ -153,20 +182,9 @@ public class CafsProvider extends FileSystemProvider {
         try {
             // Use a 1 byte fake data for content of dir asset
             InputStream is = new ByteArrayInputStream(new byte[1]);
-            AssetMetadata assetMetadata = storageClient.uploadAssetOneShot(new UploadAssetRequest(accessToken, containerId,
-                    dir.getFileName().toString(), containerkey, is)
-                    .withAssetType(CafsFile.TYPE_DIR).withAssetSize(1L).withParentId(parentId)
-                    .withCustomMetadata(CustomJsonUtil.INIT_DIR_CUSTOM_METADATA));
 
-            // If it is not root level asset, add child info into custom metadata
-            if (parentId != null) {
-                final String retrievedJson = storageClient.getCustomAssetMetadata(
-                        new GetCustomAssetMetadataRequest(accessToken, containerId, parentId));
-                String newJson = CustomJsonUtil.addSubInode(retrievedJson, assetMetadata.getName(), assetMetadata.getAssetId());
+            createFile(dir.getFileName().toString(), is, 1L, parentId, CafsFile.TYPE_DIR);
 
-                storageClient.setCustomAssetMetadata(new SetCustomAssetMetadataRequest(
-                        accessToken, containerId, parentId, newJson));
-            }
             // System.out.println("Create Directory " + assetMetadata.getName() + ", " + assetMetadata.getType());
         } catch (Exception e) {
             System.out.println("Exception in createDirectory: " + e);
@@ -174,10 +192,39 @@ public class CafsProvider extends FileSystemProvider {
         }
     }
 
+    public static void createFile(String fileName, InputStream is, long size, String parentId, String type) throws Exception {
+        AssetMetadata assetMetadata = storageClient.uploadAssetOneShot(new UploadAssetRequest(accessToken, containerId,
+                fileName, containerkey, is)
+                .withAssetType(type).withAssetSize(size).withParentId(parentId)
+                .withCustomMetadata(CustomJsonUtil.INIT_DIR_CUSTOM_METADATA));
+
+        // If it is not root level asset, add child info into custom metadata
+        if (parentId != null) {
+            final String retrievedJson = storageClient.getCustomAssetMetadata(
+                    new GetCustomAssetMetadataRequest(accessToken, containerId, parentId));
+            String newJson = CustomJsonUtil.addSubInode(retrievedJson, assetMetadata.getName(), assetMetadata.getAssetId());
+
+            storageClient.setCustomAssetMetadata(new SetCustomAssetMetadataRequest(
+                    accessToken, containerId, parentId, newJson));
+        }
+    }
+
     @Override
     public void delete(Path path) throws IOException {
         String assetId = getAssetId(path);
+        if (assetId == null) {
+            throw new RuntimeException("Could not remove root directory.");
+        }
         try {
+            String parentId = getAssetId(path.getParent());
+            if (parentId != null) {
+                // delete subnode info in custom asset metadata
+                final String retrievedJson = storageClient.getCustomAssetMetadata(
+                        new GetCustomAssetMetadataRequest(accessToken, containerId, parentId));
+                String newJson = CustomJsonUtil.removeSubInode(retrievedJson, assetId);
+                storageClient.setCustomAssetMetadata(new SetCustomAssetMetadataRequest(
+                        accessToken, containerId, parentId, newJson));
+            }
             storageClient.deleteAsset(new DeleteAssetRequest(accessToken, containerId, assetId));
         } catch (StorageServiceException e) {
             if (e.getHTTPStatus() == 403) {
