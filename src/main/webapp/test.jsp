@@ -10,6 +10,7 @@
 <head lang="en">
     <meta charset="UTF-8">
     <title></title>
+    <script src="test.js"></script>
 </head>
 <body>
 <% ArrayList<String> paths = (ArrayList)request.getAttribute("paths");
