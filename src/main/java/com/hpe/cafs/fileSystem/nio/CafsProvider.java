@@ -189,7 +189,7 @@ public class CafsProvider extends FileSystemProvider {
         }
     }
 
-    public static void createFile(String fileName, InputStream is, long size, String parentId, String type) throws Exception {
+    public static AssetMetadata createFile(String fileName, InputStream is, long size, String parentId, String type) throws Exception {
         AssetMetadata assetMetadata = storageClient.uploadAssetOneShot(new UploadAssetRequest(accessToken, containerId,
                 fileName, containerkey, is)
                 .withAssetType(type).withAssetSize(size).withParentId(parentId)
@@ -204,6 +204,7 @@ public class CafsProvider extends FileSystemProvider {
             storageClient.setCustomAssetMetadata(new SetCustomAssetMetadataRequest(
                     accessToken, containerId, parentId, newJson));
         }
+        return assetMetadata;
     }
 
     @Override
@@ -378,5 +379,10 @@ public class CafsProvider extends FileSystemProvider {
         } catch (Exception e) {
             return null;
         }
+    }
+
+    public static AssetMetadata createFolder(String name, String parentId) throws Exception {
+        InputStream is = new ByteArrayInputStream(new byte[1]);
+        return createFile(name, is, 1L, parentId, CafsFile.TYPE_DIR);
     }
 }
