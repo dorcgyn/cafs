@@ -24,4 +24,13 @@
         <url-pattern>/api/v1/browse/*</url-pattern>
     </servlet-mapping>
 
+    <servlet>
+        <servlet-name>ApiFolder</servlet-name>
+        <servlet-class>com.hpe.cafs.server.servlet.api.FolderServlet</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>ApiFolder</servlet-name>
+        <url-pattern>/api/v1/folder/</url-pattern>
+    </servlet-mapping>
+
 </web-app>
