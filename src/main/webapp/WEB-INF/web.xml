@@ -15,4 +15,13 @@
         <url-pattern>/ls</url-pattern>
     </servlet-mapping>
 
+    <servlet>
+        <servlet-name>ApiBrowse</servlet-name>
+        <servlet-class>com.hpe.cafs.server.servlet.api.BrowseServlet</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>ApiBrowse</servlet-name>
+        <url-pattern>/api/v1/browse/*</url-pattern>
+    </servlet-mapping>
+
 </web-app>

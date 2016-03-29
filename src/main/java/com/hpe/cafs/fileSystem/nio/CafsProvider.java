@@ -51,6 +51,7 @@ import com.hpe.caf.storage.sdk.model.requests.UploadAssetRequest;
 import com.hpe.cafs.config.Configuration;
 import com.hpe.cafs.config.ConfigurationFactory;
 import com.hpe.cafs.fileSystem.nio.channel.FileByteChannel;
+import com.hpe.cafs.server.model.Inode;
 import com.hpe.cafs.util.CustomJsonUtil;
 
 /**
@@ -124,7 +125,6 @@ public class CafsProvider extends FileSystemProvider {
             // if (options.contains(StandardOpenOption.WRITE))
             return new FileByteChannel(getAssetId(path.getParent()), path);
         }
-
     }
 
     // List Directory
@@ -342,4 +342,41 @@ public class CafsProvider extends FileSystemProvider {
         return null;
     }
 
+    public static List<Inode> getAssetChildrenById(String assetId) {
+        try {
+            if (assetId == null) {
+                // For root asset case
+                final AssetMetadataList assetMetadatas = storageClient.getTopLevelAssets(
+                        new GetTopLevelAssetsRequest(accessToken, containerId));
+                List<Inode> inodes = new ArrayList<Inode>();
+                for (AssetMetadata assetMetadata : assetMetadatas.getEntries()) {
+                    Inode inode = new Inode();
+                    inode.setAssetId(assetMetadata.getAssetId());
+                    inode.setName(assetMetadata.getName());
+                    inode.setType(assetMetadata.getType());
+                    inodes.add(inode);
+                }
+                return inodes;
+            } else {
+                // For sub dir case
+                final String retrievedJson = storageClient.getCustomAssetMetadata(
+                        new GetCustomAssetMetadataRequest(accessToken, containerId, assetId));
+                List<CustomJsonUtil.InodeObj> subInodes = CustomJsonUtil.getSubInodes(retrievedJson);
+                List<Inode> inodes = new ArrayList<Inode>();
+                for (CustomJsonUtil.InodeObj inodeObj : subInodes) {
+                    AssetMetadata assetMetadata = storageClient.getAssetMetadata(
+                            new GetAssetMetadataRequest(accessToken, containerId,inodeObj.assetId));
+                    Inode inode = new Inode();
+                    inode.setAssetId(assetMetadata.getAssetId());
+                    inode.setName(assetMetadata.getName());
+                    inode.setType(assetMetadata.getType());
+                    inodes.add(inode);
+                }
+                // Return null for not found
+                return inodes;
+            }
+        } catch (Exception e) {
+            return null;
+        }
+    }
 }
