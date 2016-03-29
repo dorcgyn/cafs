@@ -6,17 +6,24 @@
   ~  ******************************************************************************/
   -->
 
-<html>
+<html ng-app="app">
 <head lang="en">
     <meta charset="UTF-8">
     <title></title>
-    <script src="test.js"></script>
+    <script src="./resources/lib/angular-1.5.3/angular.min.js"></script>
+    <script src="./app/browse/BrowseController.js" type="text/javascript"></script>
 </head>
 <body>
-<% ArrayList<String> paths = (ArrayList)request.getAttribute("paths");
-   for (String path : paths) {
-       %><p><%= path %><p><%
-   }
-%>
+
+<div ng-controller="BrowseCtrl">
+    <button ng-click="browse('')">BROWSE ROOT</button>
+    <ul>
+        <li ng-repeat="asset in folder">
+            <div ng-click="navigate(asset)">
+                {{asset.name}}
+            </div>
+        </li>
+    </ul>
+</div>
 </body>
 </html>
