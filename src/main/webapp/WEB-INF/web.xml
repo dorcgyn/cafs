@@ -7,6 +7,15 @@
         version="3.1">
 
     <servlet>
+        <servlet-name>Dashboard</servlet-name>
+        <servlet-class>com.hpe.cafs.server.Dashboard</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>Dashboard</servlet-name>
+        <url-pattern>/dashboard</url-pattern>
+    </servlet-mapping>
+
+    <servlet>
         <servlet-name>LS</servlet-name>
         <servlet-class>com.hpe.cafs.server.servlet.LsServlet</servlet-class>
     </servlet>
@@ -31,6 +40,15 @@
     <servlet-mapping>
         <servlet-name>ApiFolder</servlet-name>
         <url-pattern>/api/v1/folder/</url-pattern>
+    </servlet-mapping>
+
+    <servlet>
+        <servlet-name>ReadFile</servlet-name>
+        <servlet-class>com.hpe.cafs.server.servlet.api.ReadServlet</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>ReadFile</servlet-name>
+        <url-pattern>/api/v1/read/*</url-pattern>
     </servlet-mapping>
 
 </web-app>

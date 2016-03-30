@@ -1,10 +1,8 @@
-/*
- * ******************************************************************************
+/*******************************************************************************
  *  * © Copyright ${year}, Hewlett-Packard Development Company, L.P.
- *  *****************************************************************************
- */
+ *******************************************************************************/
 
-package com.hpe.cafs.server.servlet;
+package com.hpe.cafs.server;
 
 import java.io.IOException;
 import java.nio.file.DirectoryStream;
@@ -19,22 +17,19 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import com.hpe.cafs.fileSystem.nio.CafsFile;
+import org.eclipse.jetty.server.Request;
+import org.eclipse.jetty.server.Server;
+import org.eclipse.jetty.server.handler.AbstractHandler;
 
 /**
  * Created by dev on 3/17/16.
  */
-public class LsServlet extends HttpServlet {
+public class Dashboard extends HttpServlet {
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException, ServletException{
-        DirectoryStream<Path> dirs = CafsFile.newDirectoryStream(Paths.get("/"));
-        Iterator<Path> iterator = dirs.iterator();
 
-        ArrayList<String> paths = new ArrayList();
-        while (iterator.hasNext()) {
-            paths.add(iterator.next().toString());
-        }
-        request.setAttribute("paths", paths);
+        response.setHeader("Access-Control-Allow-Origin", "http://localhost:8080/");
 
-        RequestDispatcher rd = request.getRequestDispatcher("index.html");
+        RequestDispatcher rd = request.getRequestDispatcher("dashboard.html");
         rd.forward(request, response);
     }
 }
