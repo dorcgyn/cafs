@@ -7,6 +7,15 @@
         version="3.1">
 
     <servlet>
+        <servlet-name>Dashboard</servlet-name>
+        <servlet-class>com.hpe.cafs.server.Dashboard</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>Dashboard</servlet-name>
+        <url-pattern>/dashboard</url-pattern>
+    </servlet-mapping>
+
+    <servlet>
         <servlet-name>LS</servlet-name>
         <servlet-class>com.hpe.cafs.server.servlet.LsServlet</servlet-class>
     </servlet>
