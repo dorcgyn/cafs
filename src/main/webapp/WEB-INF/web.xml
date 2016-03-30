@@ -33,4 +33,13 @@
         <url-pattern>/api/v1/folder/</url-pattern>
     </servlet-mapping>
 
+    <servlet>
+        <servlet-name>ReadFile</servlet-name>
+        <servlet-class>com.hpe.cafs.server.servlet.api.ReadServlet</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>ReadFile</servlet-name>
+        <url-pattern>/api/v1/read/*</url-pattern>
+    </servlet-mapping>
+
 </web-app>

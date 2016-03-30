@@ -53,6 +53,7 @@ import com.hpe.cafs.config.ConfigurationFactory;
 import com.hpe.cafs.fileSystem.nio.channel.FileByteChannel;
 import com.hpe.cafs.server.model.Inode;
 import com.hpe.cafs.util.CustomJsonUtil;
+import org.apache.commons.io.IOUtils;
 
 /**
  * Created by dev on 3/13/16.
@@ -384,5 +385,11 @@ public class CafsProvider extends FileSystemProvider {
     public static AssetMetadata createFolder(String name, String parentId) throws Exception {
         InputStream is = new ByteArrayInputStream(new byte[1]);
         return createFile(name, is, 1L, parentId, CafsFile.TYPE_DIR);
+    }
+
+    public static String readFile(String assetId) throws Exception {
+        Asset asset = storageClient.downloadAsset(new DownloadAssetRequest(accessToken, containerId, assetId, containerkey));
+        InputStream is = asset.getDecryptedStream();
+        return IOUtils.toString(is);
     }
 }
