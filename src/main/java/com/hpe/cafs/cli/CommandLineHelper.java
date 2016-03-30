@@ -20,8 +20,13 @@ public class CommandLineHelper {
     private boolean isPut = false;
     private boolean isCat = false;
     private boolean isGet = false;
+    private boolean isCopyToLocal = false;
+    private boolean isCopyFromLocal = false;
+    private boolean isHelp = false;
 
-    private String path = null;
+    private String path = null; 
+    private String sourceFile = null;
+    private String destinationFile = null;
 
     public CommandLineHelper(String[] args) throws Exception {
         CommandLine cmdLine;
@@ -40,19 +45,52 @@ public class CommandLineHelper {
         isLs = cmdLine.hasOption(LS);
         isRemove = cmdLine.hasOption(RM);
         isCat = cmdLine.hasOption(CAT);
-
-        // Get Path String from last arg
-        path = args[args.length-1].trim();
+        isCopyToLocal = cmdLine.hasOption(COPYTOLOCAL);
+        isCopyFromLocal = cmdLine.hasOption(COPYFROMLOCAL);
+        isHelp = cmdLine.hasOption(HELP);
+        
+        if (isCopyToLocal || isCopyFromLocal) {
+        	if (args.length == 3) {
+        		sourceFile = args[1];
+        		destinationFile = args[2];
+        	}
+        } else {
+        	// Get Path String from last arg
+        	if (args.length > 1) {
+        		path = args[args.length-1].trim();
+        	}
+        }
     }
 
     public boolean validateCmdOptions() {
-        return ((isMkdir?1:0) + (isLs?1:0) + (isRemove?1:0) + (isCat?1:0)== 1);
+    	int numOfCmdOptions = 0;
+    	numOfCmdOptions = (isMkdir?1:0) + (isLs?1:0) + (isRemove?1:0) + (isCat?1:0) +
+    					  (isCopyToLocal?1:0) + (isCopyFromLocal?1:0) + (isHelp?1:0);
+    	if (numOfCmdOptions != 1) {
+    		// Only one command option is allowed per invocation of CLI.
+    		return false;
+    	}
+    	
+    	// Validate the parameters of the specified option
+    	if (isCopyToLocal || isCopyFromLocal) {
+    		if ( (sourceFile == null) || (destinationFile == null) ) {
+    			// CopyToLocal and copyFromLocal options require two parameters
+    			return false;
+    		}
+    	}
+    	
+    	return true;
+    	
+        // return ((isMkdir?1:0) + (isLs?1:0) + (isRemove?1:0) + (isCat?1:0)== 1);
     }
 
     private final static String MKDIR = "mkdir";
     private final static String RM = "rm";
     private final static String LS = "ls";
     private final static String CAT = "cat";
+    private final static String COPYTOLOCAL = "copyToLocal";
+    private final static String COPYFROMLOCAL = "copyFromLocal";
+    private final static String HELP = "help";
 
     private Options getCommandOptions() {
         final Options options = new Options();
@@ -70,7 +108,19 @@ public class CommandLineHelper {
         // cat cmd
         options.addOption(Option.builder(CAT).longOpt(CAT).desc("Cat file")
                 .build());
+        
+        // copyToLocal cmd
+        options.addOption(Option.builder(COPYTOLOCAL).longOpt(COPYTOLOCAL).desc("Copy CAFS file to local file")
+        		.build());
 
+        // copyFromLocal cmd
+        options.addOption(Option.builder(COPYFROMLOCAL).longOpt(COPYFROMLOCAL).desc("Copy local file to CAFS file")
+        		.build());
+
+        // help command
+        options.addOption(Option.builder(HELP).longOpt(HELP).desc("help")
+        		.build());
+        
         return options;
     }
 
@@ -89,9 +139,28 @@ public class CommandLineHelper {
     public boolean isCat() {
         return isCat;
     }
+    
+    public boolean isCopyToLocal() {
+    	return isCopyToLocal;
+    }
+    
+    public boolean isCopyFromLocal() {
+    	return isCopyFromLocal;
+    }
+    
+    public boolean isHelp() {
+    	return isHelp;
+    }
 
     public String getPath() {
         return path;
     }
 
+    public String getSourceFile() {
+    	return sourceFile;
+    }
+    
+    public String getDestinationFile() {
+    	return destinationFile;
+    }
 }
