@@ -10,10 +10,12 @@ angular.module('app').controller("BrowseCtrl", ['$scope', 'BrowseService', '$sta
 
     $scope.folder = [];
     $scope.currentFolder = '';
+    $scope.path = '/';
     $scope.fileContent = '';
     $scope.createFolderName = undefined;
     $scope.browse = function (id) {
         $scope.fileContent = '';
+        $scope.path = '/';
         browseFunc(id);
     };
     BrowseService.browse('').then(function(response) {
@@ -24,6 +26,7 @@ angular.module('app').controller("BrowseCtrl", ['$scope', 'BrowseService', '$sta
     $scope.navigate = function (asset) {
         $scope.fileContent = '';
         if (asset.type == "DIR") {
+            $scope.path += asset.name + '/'
             $scope.currentFolder = asset.assetId;
             browseFunc(asset.assetId);
         }
