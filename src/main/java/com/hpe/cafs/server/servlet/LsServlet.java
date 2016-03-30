@@ -34,7 +34,7 @@ public class LsServlet extends HttpServlet {
         }
         request.setAttribute("paths", paths);
 
-        RequestDispatcher rd = request.getRequestDispatcher("test.jsp");
+        RequestDispatcher rd = request.getRequestDispatcher("index.html");
         rd.forward(request, response);
     }
 }
