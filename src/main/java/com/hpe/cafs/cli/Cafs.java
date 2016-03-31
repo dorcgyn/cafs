@@ -53,8 +53,7 @@ public class Cafs {
             Iterator iterator = dirs.iterator();
             while (iterator.hasNext()) {
                 Path fullPath = Paths.get(cmd.getPath(), iterator.next().toString());
-                System.out.println(fullPath.toString());
-                printFileAttributes(fullPath);
+                printDirectoryEntry(fullPath);
             }
             return;
         }
@@ -150,20 +149,41 @@ public class Cafs {
        	}
     }
     
-    private static void printFileAttributes(Path path) {
+    private static void printDirectoryEntry(Path fullPath) {
+    	String fileType = "-";
+    	String filePermissions = "rwxrwxrwx"; // TODO: Get actual permissions of this file.
+    	
     	try {
-			Map<String, Object> attributeMap = CafsFile.readAttributes(path, null);
+			Map<String, Object> attributeMap = CafsFile.readAttributes(fullPath, null);
+
+			if (attributeMap != null) {
+				if (attributeMap.containsKey("type")) {
+					Object typeObj = attributeMap.get("type");
+					if (typeObj != null) {
+						String typeString = typeObj.toString();
+						if (typeString.compareToIgnoreCase("DIR") == 0) {
+							fileType = "d";
+						}
+					}
+					
+					// System.out.print("\ttype: " + attributeMap.get("type"));
+				}
+			}
+			
+			System.out.print(fileType + filePermissions);
+			System.out.print("\t");;
+
 			if (attributeMap != null) {
 				if (attributeMap.containsKey("size")) {
-					System.out.print("\tsize: " + attributeMap.get("size"));
+					System.out.print(attributeMap.get("size"));
 				}
-				
-				if (attributeMap.containsKey("type")) {
-					System.out.print("\ttype: " + attributeMap.get("type"));
-				}
-				
-				System.out.println("");
+			} else {
+				System.out.print("0");
 			}
+			
+			System.out.print("\t");
+			System.out.println(fullPath.toString());
+			
 			// System.out.println("Number of attributes: " + attributeMap.size());
 			// System.out.println("type: " + attributeMap.get("type")
 		} catch (IOException e) {
